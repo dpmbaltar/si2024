@@ -71,6 +71,28 @@ module TronBattle
     neighbors = problem.generate_neighbors
     best_neighbor = neighbors.min_by { |neighbor| problem.heuristic(neighbor) }
   end
+
+  # Simulated Annealing.
+  def self.simulated_annealing(problem, initial_temperature, cooling_rate)
+    current = problem.generate_random_neighbor
+    best_solution = current
+    @@temperature ||= initial_temperature
+    return if @@temperature <= 0.1
+
+    #while @@temperature > 0.1 # Termination condition
+      neighbor = problem.generate_random_neighbor
+      delta_e = problem.heuristic(neighbor) - problem.heuristic(current)
+
+      if delta_e < 0 || Math.exp(-delta_e / @@temperature) > rand
+        current = neighbor
+        best_solution = current if problem.heuristic(current) < problem.heuristic(best_solution)
+      end
+
+      @@temperature *= cooling_rate
+    #end
+
+    best_solution
+  end
 end
 
 # game problem instance
@@ -103,6 +125,7 @@ loop do
   # To debug: STDERR.puts "Debug messages..."
 
   # Apply Hill Climbing to find our next move
-  hill_climbing_solution = TronBattle.hill_climbing(problem)
-  puts hill_climbing_solution[:move]
+  #solution = TronBattle.hill_climbing(problem)
+  solution = TronBattle.simulated_annealing(problem, 100, 0.95)
+  puts solution[:move]
 end
