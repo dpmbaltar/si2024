@@ -72,7 +72,11 @@ module TronBattle
 
     # Generate neighboring solutions.
     def generate_neighbors
-      neighbors = MOVES.dup.select { |move| move != state.player.last_move }
+      neighbors = MOVES.dup
+      neighbors.delete("UP") if state.player.last_move == "DOWN"
+      neighbors.delete("DOWN") if state.player.last_move == "UP"
+      neighbors.delete("LEFT") if state.player.last_move == "RIGHT"
+      neighbors.delete("RIGHT") if state.player.last_move == "LEFT"
       neighbors.map do |move|
         new_state = GameState.new
         new_state.matrix = state.matrix.dup
