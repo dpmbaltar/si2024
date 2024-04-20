@@ -28,6 +28,7 @@ module TronBattle
 
     # Player's last move.
     def last_move
+      return nil if prev[:x] < 0 || prev[:y] < 0
       return "UP" if head[:y] < prev[:y]
       return "DOWN" if head[:y] > prev[:y]
       return "LEFT" if head[:x] < prev[:x]
