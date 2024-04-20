@@ -140,13 +140,13 @@ module TronBattle
 
   # Simulated Annealing.
   def self.simulated_annealing(problem, initial_temperature, cooling_rate)
-    # current = problem.generate_random_neighbor
     current = problem.state
+    # En el primer movimiento, last_move es nulo
+    current = problem.generate_random_neighbor if problem.state.player.last_move.nil?
     best_solution = current
     @@temperature ||= initial_temperature
     return best_solution if @@temperature <= 0.1
 
-    #while @@temperature > 0.1 # Termination condition
     neighbor = problem.generate_random_neighbor
     delta_e = problem.heuristic(neighbor) - problem.heuristic(current)
 
@@ -156,7 +156,6 @@ module TronBattle
     end
 
     @@temperature *= cooling_rate
-    #end
 
     best_solution
   end
