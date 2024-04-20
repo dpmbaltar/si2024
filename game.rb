@@ -77,6 +77,7 @@ module TronBattle
       neighbors.delete("DOWN") if state.player.last_move == "UP"
       neighbors.delete("LEFT") if state.player.last_move == "RIGHT"
       neighbors.delete("RIGHT") if state.player.last_move == "LEFT"
+      STDERR.puts "Neighbors: %s" % neighbors.to_s
       neighbors.map do |move|
         new_state = GameState.new
         new_state.matrix = state.matrix.dup
@@ -180,6 +181,8 @@ loop do
     problem.state.matrix[y1][x1] = 1
     new_head = { x: x1, y: y1 }
     if p == i
+      old_head = problem.state.player.head
+      problem.state.player.prev.merge!(old_head)
       problem.state.player.head.merge!(new_head)
     else
       problem.state.enemy.head.merge!(new_head)
@@ -192,5 +195,6 @@ loop do
   # Apply Hill Climbing to find our next move
   solution = TronBattle.hill_climbing(problem)
   # solution = TronBattle.simulated_annealing(problem, 100, 0.95)
+  STDERR.puts "Next move: %s" % solution.player.last_move
   puts solution.player.last_move
 end
