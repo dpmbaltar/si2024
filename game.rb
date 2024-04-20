@@ -4,35 +4,93 @@ STDOUT.sync = true # DO NOT REMOVE
 
 # Game algorithms module.
 module TronBattle
-  # Grid width (x axis).
+  # Game grid's width (x axis).
   WIDTH = 30
-  # Grid height (y axis).
+  # Game grid's height (y axis).
   HEIGHT = 20
-  # Possible moves.
+  # Game's possible moves.
   MOVES = %w[UP DOWN LEFT RIGHT]
 
-  # Optimization Problem.
-  class OptimizationProblem
+  # Player state.
+  class Player
+    # head: player's last coordinates
+    # tail: player's start coordinates
+    # prev: player's previous coordinates
+    attr_accessor :head, :tail, :prev
+
+    # Constructor.
+    # At start, head, tail and previous coordinates are the same.
+    def initialize(x: -1, y: -1)
+      @head = { x: x, y: y }
+      @tail = { x: x, y: y }
+      @prev = { x: x, y: y }
+    end
+
+    # Player's last move.
+    def last_move
+      return "UP" if head[:y] < prev[:y]
+      return "DOWN" if head[:y] > prev[:y]
+      return "LEFT" if head[:x] < prev[:x]
+      return "RIGHT" if head[:x] > prev[:x]
+      nil
+    end
+
+    # Create copy.
+    def copy
+      new_player = Player.new
+      new_player.head.merge!(self.head)
+      new_player.tail.merge!(self.tail)
+      new_player.prev.merge!(self.prev)
+      new_player
+    end
+  end
+
+  # Game state.
+  class GameState
     # matrix: WIDTH*HEIGHT matrix
     # player: player head hash
     # enemy: enemy head hash
-    attr_reader :matrix, :player, :enemy
+    attr_accessor :matrix, :player, :enemy
 
     # Constructor.
     def initialize
       @matrix = Array.new(HEIGHT) { Array.new(WIDTH, 0) }
-      @player = { x: -1, y: -1 }
-      @enemy = { x: -1, y: -1 }
+      @player = Player.new
+      @enemy = Player.new
+    end
+  end
+
+  # Optimization Problem.
+  class OptimizationProblem
+    # state: game state instance
+    attr_accessor :state
+
+    # Constructor.
+    def initialize
+      @state = GameState.new
     end
 
     # Generate neighboring solutions.
     def generate_neighbors
-      [
-        { x: @player[:x], y: @player[:y] - 1, move: "UP" },
-        { x: @player[:x], y: @player[:y] + 1, move: "DOWN" },
-        { x: @player[:x] - 1, y: @player[:y], move: "LEFT" },
-        { x: @player[:x] + 1, y: @player[:y], move: "RIGHT" }
-      ]
+      neighbors = MOVES.dup.select { |move| move != state.player.last_move }
+      neighbors.map do |move|
+        new_state = GameState.new
+        new_state.matrix = state.matrix.dup
+        new_state.enemy = state.enemy.copy
+        new_state.player = state.player.copy
+        new_state.player.prev.merge!(state.player.head)
+        case move
+        when "UP"
+          new_state.player.head[:y] -= 1
+        when "DOWN"
+          new_state.player.head[:y] += 1
+        when "LEFT"
+          new_state.player.head[:x] -= 1
+        when "RIGHT"
+          new_state.player.head[:x] += 1
+        end
+        new_state
+      end
     end
 
     # Generate a random neighboring solution.
@@ -42,9 +100,11 @@ module TronBattle
 
     # Calculate the heuristic value of the solution.
     def heuristic(solution)
-      x = solution[:x]
-      y = solution[:y]
-      manhattan_distance(x, y, @enemy[:x], @enemy[:y]) + penalty(x, y)
+      x = solution.player.head[:x]
+      y = solution.player.head[:y]
+      enemy_x = @state.enemy.head[:x]
+      enemy_y = @state.enemy.head[:y]
+      manhattan_distance(x, y, enemy_x, enemy_y) + penalty(x, y)
     end
 
     private
@@ -56,7 +116,7 @@ module TronBattle
 
     # Penalty value for (x, y).
     def penalty(x, y)
-      return 50 if in_border?(x, y) || @matrix[y][x] == 1
+      return 50 if in_border?(x, y) || @state.matrix[y][x] == 1
       0
     end
 
@@ -74,21 +134,22 @@ module TronBattle
 
   # Simulated Annealing.
   def self.simulated_annealing(problem, initial_temperature, cooling_rate)
-    current = problem.generate_random_neighbor
+    # current = problem.generate_random_neighbor
+    current = problem.state
     best_solution = current
     @@temperature ||= initial_temperature
-    return if @@temperature <= 0.1
+    return best_solution if @@temperature <= 0.1
 
     #while @@temperature > 0.1 # Termination condition
-      neighbor = problem.generate_random_neighbor
-      delta_e = problem.heuristic(neighbor) - problem.heuristic(current)
+    neighbor = problem.generate_random_neighbor
+    delta_e = problem.heuristic(neighbor) - problem.heuristic(current)
 
-      if delta_e < 0 || Math.exp(-delta_e / @@temperature) > rand
-        current = neighbor
-        best_solution = current if problem.heuristic(current) < problem.heuristic(best_solution)
-      end
+    if delta_e <= 0 || Math.exp(-delta_e / @@temperature) > rand
+      current = neighbor
+      best_solution = current if problem.heuristic(current) < problem.heuristic(best_solution)
+    end
 
-      @@temperature *= cooling_rate
+    @@temperature *= cooling_rate
     #end
 
     best_solution
@@ -111,13 +172,13 @@ loop do
     x0, y0, x1, y1 = gets.split.map { |x| x.to_i }
 
     # Update game state
-    problem.matrix[y0][x0] = 1
-    problem.matrix[y1][x1] = 1
-    head = { x: x1, y: y1 }
+    problem.state.matrix[y0][x0] = 1
+    problem.state.matrix[y1][x1] = 1
+    new_head = { x: x1, y: y1 }
     if p == i
-      problem.player.merge!(head)
+      problem.state.player.head.merge!(new_head)
     else
-      problem.enemy.merge!(head)
+      problem.state.enemy.head.merge!(new_head)
     end
   end
 
@@ -125,7 +186,7 @@ loop do
   # To debug: STDERR.puts "Debug messages..."
 
   # Apply Hill Climbing to find our next move
-  #solution = TronBattle.hill_climbing(problem)
-  solution = TronBattle.simulated_annealing(problem, 100, 0.95)
-  puts solution[:move]
+  solution = TronBattle.hill_climbing(problem)
+  # solution = TronBattle.simulated_annealing(problem, 100, 0.95)
+  puts solution.player.last_move
 end
