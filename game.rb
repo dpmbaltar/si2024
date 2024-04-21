@@ -75,7 +75,6 @@ module TronBattle
       neighbors.delete("DOWN") if state.player.last_move == "UP"
       neighbors.delete("LEFT") if state.player.last_move == "RIGHT"
       neighbors.delete("RIGHT") if state.player.last_move == "LEFT"
-      STDERR.puts "Vecinos: %s" % neighbors.to_s
       neighbors.map do |move|
         new_state = GameState.new
         new_state.matrix = state.matrix.dup
@@ -191,6 +190,5 @@ loop do
   # Aplicar Simulated Annealing para encontrar el próximo movimiento
   # solution = TronBattle.simulated_annealing(problem, 100, 0.95)
 
-  STDERR.puts "Próximo movimiento: %s" % solution.player.last_move
   puts solution.player.last_move
 end
