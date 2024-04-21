@@ -1,32 +1,29 @@
-STDOUT.sync = true # DO NOT REMOVE
-# Auto-generated code below aims at helping you parse
-# the standard input according to the problem statement.
+STDOUT.sync = true # AUTOGENERADO POR EL JUEGO, NO QUITAR
 
-# Game algorithms module.
+# Módulo para los algoritmos del juego.
 module TronBattle
-  # Game grid's width (x axis).
+  # Ancho de la matriz del juego (eje x).
   WIDTH = 30
-  # Game grid's height (y axis).
+  # Alto de la matriz del juego (eje y).
   HEIGHT = 20
-  # Game's possible moves.
+  # Posibles movimientos en el juego.
   MOVES = %w[UP DOWN LEFT RIGHT]
 
-  # Player state.
+  # Estado del jugador.
   class Player
-    # head: player's last coordinates
-    # tail: player's start coordinates
-    # prev: player's previous coordinates
+    # head: ubicación actual
+    # tail: ubicación inicial
+    # prev: ubicación anterior
     attr_accessor :head, :tail, :prev
 
     # Constructor.
-    # At start, head, tail and previous coordinates are the same.
     def initialize(x: -1, y: -1)
       @head = { x: x, y: y }
       @tail = { x: x, y: y }
       @prev = { x: x, y: y }
     end
 
-    # Player's last move.
+    # Último movimiento del jugador.
     def last_move
       return nil if prev[:x] < 0 || prev[:y] < 0
       return "UP" if head[:y] < prev[:y]
@@ -36,7 +33,7 @@ module TronBattle
       nil
     end
 
-    # Create copy.
+    # Crea una copia del estado actual.
     def copy
       new_player = Player.new
       new_player.head.merge!(self.head)
@@ -46,11 +43,11 @@ module TronBattle
     end
   end
 
-  # Game state.
+  # Estado del juego.
   class GameState
-    # matrix: WIDTH*HEIGHT matrix
-    # player: player head hash
-    # enemy: enemy head hash
+    # matrix: matriz de WIDTH*HEIGHT
+    # player: instancia del jugador
+    # enemy: instancia del enemigo
     attr_accessor :matrix, :player, :enemy
 
     # Constructor.
@@ -61,9 +58,9 @@ module TronBattle
     end
   end
 
-  # Optimization Problem.
+  # Problema de optimización.
   class OptimizationProblem
-    # state: game state instance
+    # state: estado del juego
     attr_accessor :state
 
     # Constructor.
@@ -71,14 +68,14 @@ module TronBattle
       @state = GameState.new
     end
 
-    # Generate neighboring solutions.
+    # Generar estados vecinos.
     def generate_neighbors
       neighbors = MOVES.dup
       neighbors.delete("UP") if state.player.last_move == "DOWN"
       neighbors.delete("DOWN") if state.player.last_move == "UP"
       neighbors.delete("LEFT") if state.player.last_move == "RIGHT"
       neighbors.delete("RIGHT") if state.player.last_move == "LEFT"
-      STDERR.puts "Neighbors: %s" % neighbors.to_s
+      STDERR.puts "Vecinos: %s" % neighbors.to_s
       neighbors.map do |move|
         new_state = GameState.new
         new_state.matrix = state.matrix.dup
@@ -99,12 +96,12 @@ module TronBattle
       end
     end
 
-    # Generate a random neighboring solution.
+    # Genera un sólo vecino.
     def generate_random_neighbor
       generate_neighbors.sample
     end
 
-    # Calculate the heuristic value of the solution.
+    # Calcula el valor de la heurística sobre el estado.
     def heuristic(solution)
       x = solution.player.head[:x]
       y = solution.player.head[:y]
@@ -115,30 +112,30 @@ module TronBattle
 
     private
 
-    # Manhattan distance from (x0, y0) to (x1, y1).
+    # Calcula la distancia Manhattan desde (x0, y0) a (x1, y1).
     def manhattan_distance(x0, y0, x1, y1)
       (x1 - x0).abs + (y1 - y0).abs
     end
 
-    # Penalty value for (x, y).
+    # Calcula la penalización para (x, y).
     def penalty(x, y)
       return 50 if in_border?(x, y) || @state.matrix[y][x] == 1
       0
     end
 
-    # Whether (x, y) is in the grid's border.
+    # Determina si (x, y) está en el borde de la matriz.
     def in_border?(x, y)
       x == -1 || y == -1 || x == WIDTH || y == HEIGHT
     end
   end
 
-  # Hill Climbing.
+  # Algoritmo Hill Climbing.
   def self.hill_climbing(problem)
     neighbors = problem.generate_neighbors
     best_neighbor = neighbors.min_by { |neighbor| problem.heuristic(neighbor) }
   end
 
-  # Simulated Annealing.
+  # Algoritmo Simulated Annealing.
   def self.simulated_annealing(problem, initial_temperature, cooling_rate)
     current = problem.state
     # En el primer movimiento, last_move es nulo
@@ -161,22 +158,22 @@ module TronBattle
   end
 end
 
-# game problem instance
+# Instancia del problema.
 problem = TronBattle::OptimizationProblem.new
 
-# game loop
+# Loop del juego.
 loop do
-  # n: total number of players (2 to 4).
-  # p: your player number (0 to 3).
+  # n: número total de jugadores (2 to 4).
+  # p: el número del jugador (0 to 3).
   n, p = gets.split.map { |x| x.to_i }
   n.times do |i|
-    # x0: starting X coordinate of lightcycle (or -1)
-    # y0: starting Y coordinate of lightcycle (or -1)
-    # x1: starting X coordinate of lightcycle (can be the same as X0 if you play before this player)
-    # y1: starting Y coordinate of lightcycle (can be the same as Y0 if you play before this player)
+    # x0: coordenada de inicio X de lightcycle (o -1)
+    # y0: coordenada de inicio Y de lightcycle (o -1)
+    # x1: coordenada de inicio X de lightcycle (puede ser igual que X0 si se juega antes que este jugador)
+    # y1: coordenada de inicio Y de lightcycle (puede ser igual que Y0 si se juega antes que este jugador)
     x0, y0, x1, y1 = gets.split.map { |x| x.to_i }
 
-    # Update game state
+    # Generar nuevo estado del juego
     problem.state.matrix[y0][x0] = 1
     problem.state.matrix[y1][x1] = 1
     new_head = { x: x1, y: y1 }
@@ -189,12 +186,11 @@ loop do
     end
   end
 
-  # Write an action using puts
-  # To debug: STDERR.puts "Debug messages..."
-
-  # Apply Hill Climbing to find our next move
+  # Aplicar Hill Climbing para encontrar el próximo movimiento
   solution = TronBattle.hill_climbing(problem)
+  # Aplicar Simulated Annealing para encontrar el próximo movimiento
   # solution = TronBattle.simulated_annealing(problem, 100, 0.95)
-  STDERR.puts "Next move: %s" % solution.player.last_move
+
+  STDERR.puts "Próximo movimiento: %s" % solution.player.last_move
   puts solution.player.last_move
 end
