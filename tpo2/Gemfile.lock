@@ -1,16 +1,18 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    json (2.7.2)
-    rubytree (2.0.3)
-      json (~> 2.0, > 2.3.1)
+    rexml (3.2.9)
+      strscan
+    ruby-graphviz (1.2.5)
+      rexml
+    strscan (3.1.0)
 
 PLATFORMS
   ruby
   x86_64-linux
 
 DEPENDENCIES
-  rubytree
+  ruby-graphviz
 
 RUBY VERSION
    ruby 3.0.6p216
