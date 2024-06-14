@@ -7,7 +7,7 @@ module ML
     data.group_by { |row| row[attr_name] }.map { |k, v| [k, v.length] }.to_h
   end
 
-  # Subconjunto de datos con con valor de atributo.
+  # Subconjunto de datos con valor de atributo.
   def self.data_subset(data, attr_name, attr_value)
     data.select { |row| row[attr_name] == attr_value }
   end
@@ -58,7 +58,7 @@ module ML
         end
       end
 
-      if max_gain["gain"] < 0.05
+      if max_gain["gain"] < 0.25
         most_frequent_class = class_frequency.max_by { |key, value| value }[0]
         tree_node.content =  most_frequent_class
       else
