@@ -6,11 +6,14 @@ def confusionMatrix(data, real_class_attr_name, predicted_class_attr_name, posit
         "true_negatives" => 0,
         "false_positives" => 0,
         "false_negatives" => 0,
+        "positives" => 0,
+        "negatives" => 0,
     }
     data.each do |tuple|
         real = tuple[real_class_attr_name]
         predicted = tuple[predicted_class_attr_name]
         if(real == positive_class_value)
+            matrix["positives"] += 1
             if(predicted == positive_class_value)
                 matrix["real_positives"]["classified_positive"] += 1
                 matrix["true_positives"] += 1
@@ -19,6 +22,7 @@ def confusionMatrix(data, real_class_attr_name, predicted_class_attr_name, posit
                 matrix["false_negatives"] += 1
             end
         else
+            matrix["negatives"] += 1
             if(predicted == positive_class_value)
                 matrix["real_negatives"]["classified_positive"] += 1
                 matrix["false_positives"] += 1
@@ -29,6 +33,10 @@ def confusionMatrix(data, real_class_attr_name, predicted_class_attr_name, posit
         end
     end
     return matrix
+end
+
+def accuracy(confusionMatrix)
+    return (confusionMatrix["true_positives"] + confusionMatrix["true_negatives"]).to_f / (confusionMatrix["positives"] + confusionMatrix["negatives"])
 end
 
 def precision(confusionMatrix)
@@ -43,6 +51,7 @@ end
 def reviewPredictionOf(data, real_class_attr_name, predicted_class_attr_name, positive_class_value)
     puts "\n >> Showing overall prediction accuracy for class #{positive_class_value}"
     matrix = confusionMatrix(data, real_class_attr_name, predicted_class_attr_name, positive_class_value)
+    accuracy = accuracy(matrix)
     precision = precision(matrix)
     recall = recall(matrix)
     puts "======Confusion Matrix======"
@@ -57,6 +66,8 @@ def reviewPredictionOf(data, real_class_attr_name, predicted_class_attr_name, po
     center_tn=top_header.length/4-matrix["true_negatives"].to_s.length
     matrix_string+=left_header_b+" "*center_fp+"#{matrix["false_positives"]}"+" "*center_fp+" | "+" "*center_tn+"#{matrix["true_negatives"]}"+" "*center_tn+"\n"
     puts matrix_string
+    puts "\n======Accuracy======"
+    puts accuracy.round(3)
     puts "\n======Precision======"
     puts precision.round(3)
     puts "\n======Recall======"
@@ -68,10 +79,12 @@ def reviewEveryPrediction(data, real_class_attr_name, predicted_class_attr_name,
     puts ">> Showing overall accuracy for every class"
     class_values.each do |value|
         matrix = confusionMatrix(data, real_class_attr_name, predicted_class_attr_name, value)
+        accuracy = accuracy(matrix)
         precision = precision(matrix)
         recall = recall(matrix)
         puts "--------------------"
         puts ">> Class value: #{value}"
+        puts "-> OVERALL ACCURACY: #{accuracy.round(3)}"
         puts "-> True Positives: #{matrix["true_positives"]}"
         puts "-> True Negatives: #{matrix["true_negatives"]}"
         puts "-> False Positives: #{matrix["false_positives"]}"

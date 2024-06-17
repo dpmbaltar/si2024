@@ -8,7 +8,7 @@
     dataArr = data.to_a
     headers = dataArr.shift
     
-    # Mesclar filas
+    # Mezclar filas
     dataArr.shuffle!
     split_index = (dataArr.size * 0.8).round
 
