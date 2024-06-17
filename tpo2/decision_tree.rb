@@ -65,10 +65,10 @@ module ML
         tree_node.content = max_gain["attribute"]
         data_freq_by_attr = attr_frequency(data, max_gain["attribute"])
         data_freq_by_attr.each do |attr_value, freq|
-          child = TreeNode.new(nil)
+          child = TreeNode.new
           tree_node.add_child(attr_value, child)
           data_with_value = data.select { |row| row[max_gain["attribute"]] == attr_value }
-          attributes_except = attributes.select { |row| row["name"] != max_gain["attribute"] }
+          attributes_except = attributes.select { |name| name != max_gain["attribute"] }
           decision_tree(data_with_value, attributes_except, child, class_attr_name)
         end
       end
@@ -94,6 +94,14 @@ module ML
       "(#{@content})"
     end
 
+    def conditions(context)
+      generate_conditions(context.to_s, self, "", 0)
+    end
+
+    def predict(row, row_context, binding_object)
+      eval(self.conditions(row_context), binding_object)
+    end
+
     def showChildren
       @children.each do |child|
         puts "\-> child with branch #{child[:edge]} is #{child[:node].to_s}"
@@ -112,6 +120,22 @@ module ML
     end
 
     private
+
+    def generate_conditions(context, node, str, lvl)
+      return "  \"" << node.content << "\"" << "\n" if node.children.empty?
+
+      offset = "  " * lvl
+      node.children.size.times do |i|
+        str << offset
+        str << "els" if i > 0
+        str << "if "
+        str << "#{context}[\"#{node.content}\"] == \"#{node.children[i][:edge]}\"\n"
+        str << offset << generate_conditions(context, node.children[i][:node], "", lvl+1)
+        str << offset << "end\n" if (i+1) == node.children.size
+      end
+
+      str
+    end
 
     def generate_graphviz(graph = nil, tree_node = nil, parent = nil)
       return if graph.nil? || tree_node.nil?
