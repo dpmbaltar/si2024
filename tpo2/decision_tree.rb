@@ -184,4 +184,30 @@ module ML
       string
     end
   end
+
+  ##Funcion para armar nuevo dataset con las predicciones
+  def self.predict_dataset(tree_root, dataset)
+    dataset.each do |tuple|
+      current_node = tree_root
+      while !current_node.nil?
+        value = tuple[current_node.content]
+        if(!current_node.children.empty?)
+          current_node = current_node.children.filter {|child| child[:edge] == value}
+          if(current_node.empty?)
+            #Entra a este if cuando el valor del atributo es "nuevo" y no está en ninguna rama
+            predicted_class = "No se pudo clasificar"
+            current_node = nil
+          else
+            current_node = current_node[0][:node]
+          end
+        else
+          #es nodo hoja
+          predicted_class = current_node.content
+          current_node = nil
+        end
+      end
+      tuple["predicted_class"] = predicted_class
+    end
+    return dataset
+  end
 end

@@ -3,11 +3,14 @@
 require "csv"
 require "ruby-graphviz"
 require_relative "decision_tree"
+require_relative "medidas"
 
 # Dataset
 DATASET_TRAINING_FILE = "data/zoo_training_data_withoutcolumnAnimalName.csv"
 DATASET_TESTING_FILE = "data/zoo_testing_data_withoutcolumnAnimalName.csv"
+DATASET_TESTING_PREDICTIONS_FILE = "data/zoo_testing_predictions.csv"
 CLASS_ATTRIBUTE = "type"
+CLASSES = ["Ave", "Reptil", "Molusco", "Pez", "Anfibio", "Mamifero", "Insecto"]
 
 # Training dataset
 dataset_training = CSV.parse(File.read(DATASET_TRAINING_FILE), headers: true)
@@ -24,6 +27,15 @@ decision_tree.save_graphviz("decision_tree.png")
 dataset_testing = CSV.parse(File.read(DATASET_TESTING_FILE), headers: true)
 dataset_testing_attrs = dataset_testing.headers
 
+predictions = ML::predict_dataset(decision_tree, dataset_testing)
+CSV.open(DATASET_TESTING_PREDICTIONS_FILE, 'w') do |csv|
+  csv << predictions.headers
+  predictions.each do |row|
+  csv << row
+  end
+end
+
+Medidas::showMultiMatrix(predictions, "type", "predicted_class", CLASSES)
 negatives = dataset_testing.each.select { |row| row["type"] != decision_tree.predict(row, :row, binding) }
 positives = dataset_testing.each.select { |row| row["type"] == decision_tree.predict(row, :row, binding) }
 
@@ -34,9 +46,3 @@ puts "Total (training): %i" % dataset_training.size
 puts "Total (testing): %i" % dataset_testing.size
 puts "Total negativos (testing): %i (%.2f%%)" % [negatives.size, negatives_percent]
 puts "Total positivos (testing): %i (%.2f%%)" % [positives.size, positives_percent]
-
-
-#puts "Matriz de confusión:"
-dataset_testing.each.map { |row| row[CLASS_ATTRIBUTE] }.to_a.uniq.each do |c|
-  # Completar...
-end
