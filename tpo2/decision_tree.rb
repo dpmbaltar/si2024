@@ -90,6 +90,10 @@ module ML
       @children.push({ node: child, edge: edge })
     end
 
+    def to_h
+      { node: self, edge: nil }
+    end
+
     def to_s
       "(#{@content})"
     end
@@ -112,11 +116,12 @@ module ML
       puts generate_tree_string(self, "", 0)
     end
 
+    # Genera y guarda el árbol en un archivo de imagen PNG.
     def save_graphviz(filename)
-      graph = GraphViz.new(:G, type: :digraph)
-      graph.node[:shape] = "box"
-      generate_graphviz(graph, self, nil)
-      graph.output(png: filename)
+      graphviz = GraphViz.new(:G, type: :digraph)
+      graphviz.node[:shape] = "box"
+      generate_graphviz(graphviz, self.to_h)
+      graphviz.output(png: filename)
     end
 
     private
@@ -137,13 +142,22 @@ module ML
       str
     end
 
-    def generate_graphviz(graph = nil, tree_node = nil, parent = nil)
-      return if graph.nil? || tree_node.nil?
+    # Genera recursivamente un objeto GraphViz para ver el árbol en una imagen.
+    def generate_graphviz(gv = nil, current = nil, gv_parent: nil, parent: nil, n: 0)
+      return if gv.nil? || current.nil?
 
-      current = graph.add_nodes(tree_node.content)
-      graph.add_edges(parent, current) unless parent.nil?
-      tree_node.children.each do |child|
-        generate_graphviz(graph, child[:node], current)
+      @n = 1 if n == 0
+      @n += 1
+      gv_node_id = "#{@n}-#{current[:node].content}"
+      gv_node = gv.add_nodes(gv_node_id, label: current[:node].content)
+
+      unless parent.nil?
+        gv_label = current[:edge].to_s
+        gv.add_edges(gv_parent, gv_node, label: gv_label)
+      end
+
+      current[:node].children.each do |child|
+        generate_graphviz(gv, child, gv_parent: gv_node, parent: current, n: @n)
       end
     end
 
