@@ -7,7 +7,7 @@ require_relative "medidas"
 
 # Dataset
 DATASET_TRAINING_FILE = "datasets/zoo_training_data.csv"
-DATASET_TESTING_FILE = "dataset/zoo_testing_data.csv"
+DATASET_TESTING_FILE = "datasets/zoo_testing_data.csv"
 DATASET_TESTING_PREDICTIONS_FILE = "datasets/zoo_testing_predictions.csv"
 CLASS_ATTRIBUTE = "type"
 CLASSES = ["Ave", "Reptil", "Molusco", "Pez", "Anfibio", "Mamifero", "Insecto"]
@@ -46,3 +46,5 @@ puts "Total (training): %i" % dataset_training.size
 puts "Total (testing): %i" % dataset_testing.size
 puts "Total negativos (testing): %i (%.2f%%)" % [negatives.size, negatives_percent]
 puts "Total positivos (testing): %i (%.2f%%)" % [positives.size, positives_percent]
+
+Medidas::reviewEveryPrediction(predictions, "type", "predicted_class", CLASSES)
