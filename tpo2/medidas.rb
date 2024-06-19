@@ -67,15 +67,27 @@ module Medidas
     end
 
     def self.accuracy(confusionMatrix)
-        return (confusionMatrix["true_positives"] + confusionMatrix["true_negatives"]).to_f / (confusionMatrix["positives"] + confusionMatrix["negatives"])
+        div = confusionMatrix["positives"] + confusionMatrix["negatives"]
+        if(div != 0)
+            return (confusionMatrix["true_positives"] + confusionMatrix["true_negatives"]).to_f / div
+        end
+        return 0
     end
 
     def self.precision(confusionMatrix)
-        return  confusionMatrix["true_positives"].to_f / (confusionMatrix["true_positives"] + confusionMatrix["false_positives"])
+        div = confusionMatrix["true_positives"] + confusionMatrix["false_positives"]
+        if(div != 0)
+            return  confusionMatrix["true_positives"].to_f / div
+        end
+        return 0
     end
 
     def self.recall(confusionMatrix)
-        return confusionMatrix["true_positives"].to_f / (confusionMatrix["true_positives"] + confusionMatrix["false_negatives"])
+        div = confusionMatrix["true_positives"] + confusionMatrix["false_negatives"]
+        if(div != 0)
+            return confusionMatrix["true_positives"].to_f / div
+        end
+        return 0
     end
 
     #Para un valor de clase en particular
